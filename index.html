@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#292d3e">
+    <meta name="description" content="Pharmacy Inventory Dashboard">
+    <title>Pharmacy Dashboard</title>
+    
+    <!-- Professional Arabic Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS Variables --- */
+        :root {
+            --bg-body: #1a1d2d;
+            --bg-card: #252a40;
+            --bg-card-hover: #2f3651;
+            --bg-input: #1e2230;
+            
+            --text-main: #ffffff;
+            --text-muted: #a0aec0;
+            
+            --primary: #805ad5; 
+            --primary-light: #9f7aea;
+            --primary-glow: rgba(128, 90, 213, 0.3);
+            
+            --status-avail-bg: rgba(45, 106, 79, 0.15);
+            --status-avail-text: #6ee7b7;
+            --status-avail-border: #059669;
+            
+            --status-low-bg: rgba(180, 83, 9, 0.15);
+            --status-low-text: #fbd38d;
+            --status-low-border: #d97706;
+            
+            --status-out-bg: rgba(153, 27, 27, 0.15);
+            --status-out-text: #feb2b2;
+            --status-out-border: #b91c1c;
+            
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 15px var(--primary-glow);
+        }
+
+        /* --- Reset & Global --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100dvh; 
+            display: flex;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        /* --- Main Layout --- */
+        .app-container {
+            width: 100%;
+            height: 100dvh;
+            max-width: 800px; 
+            background: var(--bg-body);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Header Section --- */
+        .header-section {
+            background: var(--bg-body);
+            padding: 16px 20px 0 20px;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .sub-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* --- Navigation Tabs --- */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            scrollbar-width: none; 
+        }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* --- Controls Area --- */
+        .controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 16px;
+        }
+
+        /* --- Class Slider Styles --- */
+        .slider-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-wrapper::before,
+        .slider-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 30px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .slider-wrapper::before {
+            right: 0;
+            background: linear-gradient(to right, var(--bg-body), transparent);
+        }
+        .slider-wrapper::after {
+            left: 0;
+            background: linear-gradient(to left, var(--bg-body), transparent);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 5px 4px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-chips::-webkit-scrollbar { display: none; }
+
+        .chip {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            scroll-snap-align: center;
+            user-select: none;
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(128, 90, 213, 0.4);
+            transform: scale(1.05);
+        }
+
+        .slider-btn {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--primary-light);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            opacity: 0.8;
+        }
+        .slider-btn:hover { opacity: 1; transform: scale(1.1); }
+        .slider-btn:active { transform: scale(0.9); }
+        .slider-btn svg { width: 16px; height: 16px; }
+        .slider-btn.hidden { opacity: 0; pointer-events: none; }
+
+        /* --- Search --- */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            background: #23273a;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* --- Refresh Button --- */
+        .refresh-btn {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-light);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .refresh-btn:active { transform: scale(0.9); }
+        .refresh-btn svg { width: 20px; height: 20px; }
+        .spin svg { animation: spin 1s linear infinite; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- Main Content Area --- */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-top: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- Card Styles --- */
+        .drug-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-card);
+            border-right: 4px solid transparent; 
+            cursor: pointer;
+            overflow: hidden;
+            transition: background-color 0.3s, transform 0.2s;
+            position: relative;
+        }
+
+        .drug-card:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        /* Expanded State */
+        .drug-card.expanded {
+            background-color: var(--bg-card-hover);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            z-index: 5;
+        }
+
+        .drug-card.status-avail { border-right-color: var(--status-avail-border); }
+        .drug-card.status-low { border-right-color: var(--status-low-border); }
+        .drug-card.status-out { border-right-color: var(--status-out-border); }
+
+        /* --- Card Header (Always Visible) --- */
+        .card-header {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drug-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            
+            /* FORCE LTR ALIGNMENT */
+            direction: ltr;
+            unicode-bidi: plaintext; /* Stronger override */
+            text-align: left;
+            display: inline-block;
+            width: 100%;
+            
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Dots... */
+            max-width: 85%;
+            transition: all 0.3s;
+        }
+
+        .drug-card.expanded .drug-name {
+            white-space: normal; /* Allow wrapping */
+            max-width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .chevron-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .drug-card.expanded .chevron-icon {
+            transform: rotate(180deg);
+            color: var(--primary-light);
+        }
+
+        /* --- Card Body (The "Pop Up" Drawer) --- */
+        .card-body {
+            /* Hidden State */
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            padding: 0 16px; /* Padding appears via max-height */
+        }
+
+        /* Expanded State */
+        .drug-card.expanded .card-body {
+            max-height: 300px; /* Enough space for content */
+            opacity: 1;
+            padding-bottom: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 8px;
+            padding-top: 12px;
+        }
+
+        /* Drawer Content */
+        .drug-class {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.08);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            direction: ltr; /* Ensure class names also read correctly */
+            unicode-bidi: plaintext;
+        }
+
+        .locations-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .loc-pill {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .avail .dot { background-color: var(--status-avail-border); }
+        .low .dot { background-color: var(--status-low-border); }
+        .out .dot { background-color: var(--status-out-border); }
+
+        /* Big Status Badge in Drawer */
+        .status-drawer-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: 0.1s; /* Delay slightly */
+            opacity: 0;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .status-avail .status-drawer-badge { background: var(--status-avail-bg); color: var(--status-avail-text); border: 1px solid var(--status-avail-border); }
+        .status-low .status-drawer-badge { background: var(--status-low-bg); color: var(--status-low-text); border: 1px solid var(--status-low-border); }
+        .status-out .status-drawer-badge { background: var(--status-out-bg); color: var(--status-out-text); border: 1px solid var(--status-out-border); }
+
+        .state-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .state-message svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .app-footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 10px;
+            background: var(--bg-body);
+            opacity: 0.5;
+        }
+
+        .content-area::-webkit-scrollbar { width: 4px; }
+        .content-area::-webkit-scrollbar-track { background: transparent; }
+        .content-area::-webkit-scrollbar-thumb { background: #3e4460; border-radius: 10px; }
+
+        @media (max-width: 380px) {
+            .main-title { font-size: 1rem; }
+            .drug-card { margin-bottom: 10px; }
+            .chip { font-size: 0.8rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sticky Header Section -->
+        <header class="header-section">
+            <div class="top-bar">
+                <div class="brand">
+                    <div class="main-title">Baghdad Teaching Hospital</div>
+                    <div class="sub-title">Pharmacy Department</div>
+                </div>
+                <button id="refreshBtn" class="refresh-btn" title="تحديث البيانات">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M1 20v-6h6"></path>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 1. Location Navigation -->
+            <nav class="nav-tabs" id="navTabs">
+                <button class="tab-btn active" data-target="drug-store">
+                    <span>المذخر</span>
+                </button>
+                <button class="tab-btn" data-target="internal-8">
+                    <span>داخلية ط٨</span>
+                </button>
+                <button class="tab-btn" data-target="internal-5">
+                    <span>داخلية ط٥</span>
+                </button>
+                <button class="tab-btn" data-target="er">
+                    <span>طوارئ</span>
+                </button>
+                <button class="tab-btn" data-target="consultancy">
+                    <span>استشارية</span>
+                </button>
+            </nav>
+
+            <!-- Controls -->
+            <div class="controls-area">
+                
+                <!-- 2. CLASS SLIDER -->
+                <div class="slider-wrapper">
+                    <button class="slider-btn slider-next" id="sliderNext">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    
+                    <div class="filter-chips" id="classFilterScroll">
+                        <button class="chip active" data-class="All">الكل</button>
+                        <button class="chip" data-class="المضادات الحيوية">مضادات</button>
+                        <button class="chip" data-class="الحبوب">حبوب</button>
+                        <button class="chip" data-class="الامبولات">امبولات</button>
+                        <button class="chip" data-class="السرطانية">سرطانية</button>
+                        <button class="chip" data-class="المحاليل">محاليل</button>
+                        <button class="chip" data-class="المخدرات">مخدرات</button>
+                        <button class="chip" data-class="المستلزمات">مستلزمات</button>
+                    </div>
+
+                    <button class="slider-btn slider-prev" id="sliderPrev">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+
+                <!-- 3. Search -->
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="ابحث بالاسم العلمي أو التجاري...">
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (List) -->
+        <main class="content-area" id="cardContainer">
+            <!-- Content injected via JS -->
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            Clinical Pharmacy Unit (Luay) v2.6
+        </footer>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4RquUKOxRtMhBMsj59lniMBoaTykqn_eWHME7xn6N95W85oPp6Nuoxp90fZ0CXnWqgA/exec'; 
+
+        // --- Data Storage ---
+        let pharmacyData = {
+            'drug-store': [],
+            'internal-8': [],
+            'internal-5': [],
+            'er': [],
+            'consultancy': []
+        };
+
+        // --- State Management ---
+        let state = {
+            pharmacy: 'drug-store',
+            drugClass: 'All',
+            search: '',
+            isLoading: true
+        };
+
+        // --- DOM Elements ---
+        const mainTabs = document.querySelectorAll('.tab-btn');
+        const classButtons = document.querySelectorAll('.chip');
+        const cardContainer = document.getElementById('cardContainer');
+        const searchInput = document.getElementById('searchInput');
+        const refreshBtn = document.getElementById('refreshBtn');
+        
+        // Slider Elements
+        const sliderContainer = document.getElementById('classFilterScroll');
+        const btnNext = document.getElementById('sliderNext');
+        const btnPrev = document.getElementById('sliderPrev');
+
+        // --- Helper Functions ---
+        function getArabicStatus(status) {
+            if (!status) return { text: 'غير معروف', class: 'status-low', type: 'low' };
+            const s = status.toString().toLowerCase().trim();
+            
+            if (s === 'available' || s === 'متوفر') 
+                return { text: 'متوفر', class: 'status-avail', type: 'avail' };
+            
+            if (s === 'low' || s === 'شحيح') 
+                return { text: 'شحيح', class: 'status-low', type: 'low' };
+            
+            if (s === 'out of stock' || s === 'مفقود') 
+                return { text: 'مفقود', class: 'status-out', type: 'out' };
+                
+            return { text: status, class: 'status-low', type: 'low' };
+        }
+
+        function getArabicLocationName(key) {
+            const map = {
+                'drug-store': 'المخزن',
+                'internal-5': 'داخلية ٥',
+                'internal-8': 'داخلية ٨',
+                'er': 'طوارئ',
+                'consultancy': 'استشارية'
+            };
+            return map[key] || key;
+        }
+
+        // --- NEW: Best Overall Status Logic ---
+        // Checks all locations. If ANY is available -> Green. Else if ANY low -> Yellow. Else Red.
+        function getBestOverallStatus(allLocations) {
+            if (!allLocations || allLocations.length === 0) return getArabicStatus('');
+
+            let hasAvail = false;
+            let hasLow = false;
+            
+            allLocations.forEach(loc => {
+                const statusType = getArabicStatus(loc.status).type;
+                if (statusType === 'avail') hasAvail = true;
+                if (statusType === 'low') hasLow = true;
+            });
+
+            if (hasAvail) return getArabicStatus('available');
+            if (hasLow) return getArabicStatus('low');
+            return getArabicStatus('out of stock');
+        }
+
+        // --- Fetch Data ---
+        async function fetchData() {
+            try {
+                const cacheBuster = '?t=' + new Date().getTime();
+                const response = await fetch(GOOGLE_SCRIPT_URL + cacheBuster);
+                
+                if (!response.ok) throw new Error("Network response was not ok");
+                
+                const data = await response.json();
+
+                pharmacyData = {
+                    'drug-store': [],
+                    'internal-8': [],
+                    'internal-5': [],
+                    'er': [],
+                    'consultancy': []
+                };
+
+                const locations = ['drug-store', 'internal-5', 'internal-8', 'er', 'consultancy'];
+
+                data.forEach((row, index) => {
+                    if (!row.name || row.name.toString().trim() === "") return;
+
+                    let drugLocations = [];
+                    locations.forEach(loc => {
+                        const status = row[loc];
+                        if (status && status.toString().trim() !== "") {
+                            drugLocations.push({ key: loc, status: status });
+                        }
+                    });
+
+                    locations.forEach(loc => {
+                        const status = row[loc];
+                        if (status && status.toString().trim() !== "") {
+                            pharmacyData[loc].push({
+                                id: index,
+                                name: row.name,
+                                class: row.class || "غير مصنف", 
+                                status: status,
+                                allLocations: drugLocations
+                            });
+                        }
+                    });
+                });
+
+                state.isLoading = false;
+                renderCards();
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                state.isLoading = false;
+                cardContainer.innerHTML = `
+                    <div class="state-message">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <div>فشل الاتصال بالخادم</div>
+                        <div style="font-size:0.8rem; margin-top:5px">تأكد من الإنترنت واضغط تحديث</div>
+                    </div>`;
+                refreshBtn.classList.remove('spin');
+            }
+        }
+
+        // --- Render Cards ---
+        function renderCards() {
+            if (state.isLoading) {
+                cardContainer.innerHTML = `
+                    <div class="state-message">
+                        <svg class="spin" style="width:40px;height:40px;margin:0 auto 15px;color:var(--primary-light);" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div>جاري تحديث المخزون...</div>
+                    </div>`;
+                return;
+            }
+
+            const rawData = pharmacyData[state.pharmacy] || [];
+            
+            let filtered = rawData.filter(item => 
+                item.name && item.name.toString().toLowerCase().includes(state.search.toLowerCase())
+            );
+
+            if (state.drugClass !== 'All') {
+                const targetClass = state.drugClass; 
+                filtered = filtered.filter(item => {
+                    const itemClass = item.class || "";
+                    return itemClass.trim() === targetClass || 
+                           itemClass.includes(targetClass) || 
+                           targetClass.includes(itemClass);
+                });
+            }
+
+            cardContainer.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                cardContainer.innerHTML = `
+                    <div class="state-message">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div>لا توجد نتائج مطابقة</div>
+                    </div>`;
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            filtered.forEach(drug => {
+                // UPDATED LOGIC: Use Best Overall Status for the main badge
+                const statusData = getBestOverallStatus(drug.allLocations);
+                
+                let locationsHtml = '';
+                if (drug.allLocations && drug.allLocations.length > 0) {
+                    drug.allLocations.forEach(loc => {
+                        const locName = getArabicLocationName(loc.key);
+                        const locStatus = getArabicStatus(loc.status);
+                        locationsHtml += `
+                            <div class="loc-pill ${locStatus.type}">
+                                <div class="dot"></div> ${locName}
+                            </div>
+                        `;
+                    });
+                }
+                
+                const card = document.createElement('div');
+                card.className = `drug-card ${statusData.class}`;
+                
+                // Header (Name + Chevron)
+                const header = document.createElement('div');
+                header.className = 'card-header';
+                header.innerHTML = `
+                    <span class="drug-name">${drug.name}</span>
+                    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                `;
+
+                // Body (Drawer Content)
+                const body = document.createElement('div');
+                body.className = 'card-body';
+                body.innerHTML = `
+                    <span class="drug-class">${drug.class}</span>
+                    <div class="locations-row">
+                        ${locationsHtml}
+                    </div>
+                    <div class="status-drawer-badge">
+                        ${statusData.text}
+                    </div>
+                `;
+
+                card.appendChild(header);
+                card.appendChild(body);
+                fragment.appendChild(card);
+            });
+
+            cardContainer.appendChild(fragment);
+        }
+
+        // --- Slider Logic ---
+        function checkSliderScroll() {
+            const maxScrollLeft = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+            
+            if (sliderContainer.scrollLeft <= 0) {
+                btnPrev.classList.add('hidden');
+            } else {
+                btnPrev.classList.remove('hidden');
+            }
+
+            if (Math.abs(sliderContainer.scrollLeft - maxScrollLeft) < 5 || maxScrollLeft <= 0) {
+                btnNext.classList.add('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+            }
+        }
+
+        btnNext.addEventListener('click', () => {
+            const scrollAmount = sliderContainer.clientWidth * 0.6;
+            sliderContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        });
+
+        btnPrev.addEventListener('click', () => {
+            const scrollAmount = sliderContainer.clientWidth * 0.6;
+            sliderContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        });
+
+        // --- Card Expand Logic (NEW) ---
+        cardContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.drug-card');
+            if (card) {
+                const isExpanded = card.classList.contains('expanded');
+                
+                // Optional: Close others
+                // document.querySelectorAll('.drug-card').forEach(c => c.classList.remove('expanded'));
+                
+                if (!isExpanded) {
+                    card.classList.add('expanded');
+                } else {
+                    card.classList.remove('expanded');
+                }
+            }
+        });
+
+        // --- Event Listeners ---
+        mainTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                mainTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                state.pharmacy = tab.dataset.target;
+                state.drugClass = 'All'; 
+                updateClassFilterUI();
+                renderCards();
+            });
+        });
+
+        classButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                classButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.drugClass = btn.dataset.class;
+                
+                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                
+                renderCards();
+            });
+        });
+
+        function updateClassFilterUI() {
+            classButtons.forEach(b => b.classList.remove('active'));
+            const allBtn = document.querySelector('.chip[data-class="All"]');
+            if(allBtn) {
+                allBtn.classList.add('active');
+                allBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            state.search = e.target.value.trim();
+            renderCards();
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            refreshBtn.classList.add('spin');
+            state.isLoading = true;
+            renderCards();
+            
+            fetchData().finally(() => {
+                refreshBtn.classList.remove('spin');
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSliderScroll();
+            sliderContainer.addEventListener('scroll', checkSliderScroll);
+            
+            fetchData();
+        });
+
+    </script>
+</body>
+</html>
